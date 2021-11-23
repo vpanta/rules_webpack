@@ -65,6 +65,11 @@ See https://webpack.js.org/configuration/""",
         allow_single_file = [".js"],
         default = "//@aspect-build/webpack/webpack:webpack.config.js",
     ),
+    "_node_context_data": attr.label(
+        default = "@build_bazel_rules_nodejs//internal:node_context_data",
+        providers = [NodeContextInfo],
+        doc = "Where to retrieve the NodeContextInfo, which contains data such as whether or not to stamp the build.",
+    ),
     "ignore_compilation_mode": attr.bool(default = False),
 }
 
@@ -203,7 +208,7 @@ def _webpack_impl(ctx):
         args.add_all(["--output-path", outputs[0].dirname])
 
     # If requested by the build, include the Build environment info for stamping.
-    if ctx.attr.node_context_data[NodeContextInfo].stamp:
+    if ctx.attr._node_context_data[NodeContextInfo].stamp:
         args.add_joined("--env", ["bazelVersionFile", ctx.version_file], join_with = "=")
         args.add_joined("--env", ["bazelInfoFile", ctx.info_file], join_with = "=")
         inputs.append(ctx.info_file)
