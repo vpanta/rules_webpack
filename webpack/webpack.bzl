@@ -202,13 +202,20 @@ def _webpack_impl(ctx):
     else:
         args.add_all(["--output-path", outputs[0].dirname])
 
-    # Merge all webpack configs
-    args.add("--merge")
+    # If requested by the build, include the Build environment info for stamping.
+    if ctx.attr.node_context_data[NodeContextInfo].stamp:
+        args.add_joined("--env", ["bazelVersionFile", ctx.version_file], join_with = "=")
+        args.add_joined("--env", ["bazelInfoFile", ctx.info_file], join_with = "=")
+        inputs.append(ctx.info_file)
+        inputs.append(ctx.version_file)
 
     # Add module mappings as resolution aliases
     for name, path in package_map.items():
         args.add("--resolve-alias-alias", path)
         args.add("--resolve-alias-name", name)
+
+    # Merge all webpack configs
+    args.add("--merge")
 
     run_node(
         ctx,
